@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtVault - Join the Atelier ✨</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <h1>Welcome 🎀🎀🎀</h1>
+        <p>Create your Artist Profile シ</p>
+        
+        <form action="{{ url_for('signup_page') }}" method="POST">
+            <div class="form-grid">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="email" name="email" placeholder="Email ✨" required>
+                
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="confirm_password" placeholder="Confirm password" required>
+                
+                <div class="security-group">
+                    <label style="font-weight: bold;">Security Question:</label>
+                    <select name="security_question">
+                        <option value="color">Your signature color?</option>
+                        <option value="pet">Name of your first pet?</option>
+                        <option value="snack">Favorite strawberry snack?</option>
+                    </select>
+                </div>
+                
+                <div style="grid-column: span 2;">
+                    <input type="text" name="security_answer" placeholder="Your Secret Answer" required>
+                </div>
+            </div>
+
+            <p style="margin-top: 15px;">
+                Already have an account? <a href="{{ url_for('login_logic') }}">Login</a>
+            </p>
+            
+            <button type="submit" class="done-btn">Done</button>
+        </form>
+    </div>
+</body>
+</html>

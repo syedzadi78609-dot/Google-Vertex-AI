@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Atelier - Animation Studio 🎬</title>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Quicksand', sans-serif; box-sizing: border-box; }
+        body { background: #fff0f3; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        
+        .studio-container {
+            width: 95vw; height: 90vh; background: white; border: 5px solid black; 
+            border-radius: 40px; padding: 20px; text-align: center;
+            box-shadow: 15px 15px 0px #ffcad4; display: flex; flex-direction: column;
+            position: relative;
+        }
+
+        .screen-area {
+            flex-grow: 1; background: #ffe5ec; border: 3px solid black; margin: 20px;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 0 15px #ffcad4;
+        }
+
+        #filmstrip {
+            display: flex; gap: 15px; padding: 20px; overflow-x: auto; width: 100%; height: 100%;
+            align-items: center;
+        }
+        .frame-thumb {
+            height: 150px; border: 3px solid black; border-radius: 15px;
+            box-shadow: 5px 5px 0px #ff8fa3; background: white;
+        }
+
+        #player-img { max-height: 100%; max-width: 100%; display: none; object-fit: contain; }
+
+        #splash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ff8fa3; color: white; display: none;
+            align-items: center; justify-content: center; font-family: 'Grand Hotel';
+            font-size: 4rem; z-index: 10;
+        }
+
+        #custom-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: none;
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .pink-modal {
+            background: white; border: 5px solid black; border-radius: 30px;
+            padding: 30px; width: 400px; box-shadow: 10px 10px 0px #ffcad4;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal-text { color: #ff8fa3; font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; }
+
+        .frame-counter {
+            position: absolute; bottom: 10px; right: 20px; 
+            background: rgba(255, 143, 163, 0.9); color: white;
+            padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 2px solid black;
+        }
+
+        .controls {
+            padding: 20px; background: white; border-top: 3px solid #ffcad4;
+            display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+
+        .speed-control { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        input[type=range] { -webkit-appearance: none; width: 150px; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { background: #ffcad4; height: 10px; border-radius: 5px; border: 2px solid black; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; background: #ff8fa3; border: 2px solid black; border-radius: 50%; cursor: pointer; margin-top: -7px; box-shadow: 2px 2px 0px black; }
+
+        .btn {
+            background: #ff8fa3; color: white; border: 2px solid black;
+            padding: 10px 25px; border-radius: 50px; cursor: pointer;
+            box-shadow: 4px 4px 0px black; font-weight: bold; transition: 0.2s;
+            text-decoration: none; display: inline-block;
+        }
+        .btn:hover { background: #ff758f; transform: translateY(-2px); }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px black; }
+        .btn-secondary { background: #333; }
+        .btn-small { padding: 8px 15px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="studio-container">
+        <div id="splash-overlay">Let's get animating! ✨</div>
+
+        <div id="custom-modal-overlay">
+            <div class="pink-modal">
+                <div class="modal-text" id="modal-message">Message goes here! 🎀</div>
+                <div style="display: flex; justify-content: center; gap: 10px;" id="modal-buttons"></div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+            <a href="{{ url_for('profile_page') }}" style="text-decoration: none; color: #ff8fa3; font-weight: bold;">⬅ Atelier</a>
+            <h1 style="font-family: 'Grand Hotel'; color: #ff8fa3; font-size: 3rem; margin: 0;">Animation Studio 🎬</h1>
+            <div style="width: 50px;"></div> 
+        </div>
+
+        <div class="screen-area">
+            <div id="filmstrip">
+                {% if frames %}
+                    {% for frame in frames %}
+                        <img src="{{ url_for('static', filename='uploads/' + frame) }}" class="frame-thumb">
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #ff8fa3; font-weight: bold; width: 100%;">Upload frames to build your filmstrip! 🎞️</p>
+                {% endif %}
+            </div>
+
+            <img id="player-img" src="">
+            <div class="frame-counter" id="counter">Frame: 0 / {{ frames|length if frames else 0 }}</div>
+        </div>
+
+        <div class="controls">
+            <form action="{{ url_for('upload_animation') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <input type="file" name="anim_frames" multiple id="framesInput" hidden onchange="document.getElementById('uploadForm').submit()">
+                <button type="button" class="btn" onclick="document.getElementById('framesInput').click()">＋ Add Frames</button>
+            </form>
+            
+            <div class="speed-control">
+                <label style="font-weight: bold; color: #ff8fa3; font-size: 0.8rem;">Speed (ms): <span id="speedVal">125</span></label>
+                <input type="range" id="speedSlider" min="50" max="1000" value="125" oninput="document.getElementById('speedVal').innerText = this.value">
+            </div>
+
+            <button class="btn" onclick="playAnimation()">▶ Play</button>
+            <button class="btn" onclick="stopAnimation()">⏹ Stop</button>
+            <button class="btn btn-secondary" onclick="resetStudio()">🧹 Clear</button>
+        </div>
+    </div>
+
+    <script>
+        let frames = [
+            {% for frame in frames %}
+                "{{ url_for('static', filename='uploads/' + frame) }}",
+            {% endfor %}
+        ];
+        
+        let currentFrame = 0;
+        let animInterval = null;
+        const imgElement = document.getElementById('player-img');
+        const filmstrip = document.getElementById('filmstrip');
+        const splash = document.getElementById('splash-overlay');
+        const counterElement = document.getElementById('counter');
+        const modalOverlay = document.getElementById('custom-modal-overlay');
+        const modalMessage = document.getElementById('modal-message');
+        const modalButtons = document.getElementById('modal-buttons');
+        const speedSlider = document.getElementById('speedSlider');
+
+        function showPinkModal(message, type, onConfirm) {
+            modalMessage.innerText = message;
+            modalButtons.innerHTML = '';
+            if (type === 'confirm') {
+                let okBtn = document.createElement('button');
+                okBtn.className = 'btn btn-small';
+                okBtn.innerText = 'Yes! 🎀';
+                okBtn.onclick = () => { modalOverlay.style.display = 'none'; onConfirm(); };
+                let cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn btn-secondary btn-small';
+                cancelBtn.innerText = 'No';
+                cancelBtn.onclick = () => { modalOverlay.style.display = 'none'; };
+                modalButtons.appendChild(okBtn);
+                modalButtons.appendChild(cancelBtn);
+            } else {
+                let closeBtn = document.createElement('button');
+                closeBtn.className = 'btn btn-small';
+                closeBtn.innerText = 'Got it! ✨';
+                closeBtn.onclick = () => { modalOverlay.style.display = 'none'; };
+                modalButtons.appendChild(closeBtn);
+            }
+            modalOverlay.style.display = 'flex';
+        }
+
+        function updateCounter() {
+            counterElement.innerText = `Frame: ${frames.length > 0 ? currentFrame + 1 : 0} / ${frames.length}`;
+        }
+
+        function playAnimation() {
+            if (frames.length < 2) {
+                showPinkModal("Upload at least 2 frames! 🎀", "alert");
+                return;
+            }
+
+            splash.style.display = 'flex';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                filmstrip.style.display = 'none';
+                imgElement.style.display = 'block';
+                
+                const speed = parseInt(speedSlider.value);
+                if (animInterval) clearInterval(animInterval);
+                animInterval = setInterval(() => {
+                    imgElement.src = frames[currentFrame];
+                    updateCounter();
+                    currentFrame = (currentFrame + 1) % frames.length;
+                }, speed);
+            }, 800);
+        }
+
+        function stopAnimation() {
+            clearInterval(animInterval);
+            imgElement.style.display = 'none';
+            filmstrip.style.display = 'flex';
+            currentFrame = 0;
+            updateCounter();
+        }
+
+        function resetStudio() {
+            showPinkModal("Clear your project? 🎀", "confirm", () => {
+                window.location.href = "{{ url_for('clear_animation') }}";
+            });
+        }
+    </script>
+</body>
+</html>

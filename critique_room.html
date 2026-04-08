@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensei Room - Atelier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* BASE LAYOUT */
+        .sensei-container { display: flex; height: 95vh; padding: 20px; gap: 20px; font-family: 'Comic Sans MS', cursive, sans-serif; background-color: #fdfdfd; }
+        
+        /* LEFT PANEL (SENSEI PRESENCE) */
+        .left-panel { flex: 1; border: 2px dashed #ffb6c1; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; position: relative; }
+        .sensei-title { font-family: 'Billabong', 'Pacifico', cursive; font-size: 3rem; color: #ff8da1; margin-top: 20px; }
+
+        /* RIGHT PANEL (THE CARD) */
+        .right-panel { 
+            flex: 1.6; 
+            background: white; 
+            border: 4px solid black; 
+            border-radius: 40px; 
+            padding: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* TOP SECTION (STATS & PREVIEW) */
+        .top-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .stats-bar { display: flex; flex-direction: column; gap: 10px; }
+        .stat-item { 
+            border: 3px solid black; 
+            border-radius: 15px; 
+            padding: 5px 18px; 
+            background: white; 
+            font-weight: bold; 
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+        }
+
+        /* CLICKABLE ART PREVIEW */
+        .art-preview-box { 
+            width: 150px; 
+            height: 120px; 
+            border: 3px solid black; 
+            border-radius: 20px; 
+            background: #ffe4e1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .art-preview-box:hover { transform: scale(1.02); }
+        .art-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* CHAT HISTORY */
+        .chat-box { 
+            flex-grow: 1; 
+            border: 3px solid black; 
+            border-radius: 25px; 
+            padding: 20px; 
+            overflow-y: auto; 
+            margin-bottom: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+            background: #fafafa;
+        }
+        .msg { padding: 12px 20px; border-radius: 20px; border: 3px solid black; max-width: 85%; line-height: 1.4; }
+        .sensei-msg { align-self: flex-start; background: white; border-bottom-left-radius: 5px; }
+        .user-msg { align-self: flex-end; background: #ffb6c1; border-bottom-right-radius: 5px; }
+
+        /* PROGRESS BAR AREA - WITH PULSE ADDED */
+        .progress-container { width: 100%; height: 12px; background: white; border: 2px solid black; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: #ff3366; transition: width 0.3s; }
+        
+        /* PULSE KEYFRAME */
+        @keyframes pulse-glow {
+            0% { background-color: #ff3366; box-shadow: inset 0 0 5px #fff; }
+            50% { background-color: #ff8da1; box-shadow: inset 0 0 20px #fff; }
+            100% { background-color: #ff3366; box-shadow: inset 0 0 5px #fff; }
+        }
+        .pulsing { animation: pulse-glow 1.5s infinite ease-in-out; }
+
+        /* INPUT AREA */
+        .input-container { display: flex; flex-direction: column; gap: 10px; }
+        .gemini-input-wrapper {
+            display: flex;
+            align-items: center;
+            border: 3px solid black;
+            border-radius: 20px;
+            background: white;
+            padding: 10px 15px;
+            box-shadow: 0px 4px 0px black;
+        }
+        textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        textarea:disabled { background: #f9f9f9; cursor: not-allowed; }
+
+        /* ACTION BUTTON */
+        .action-btn { 
+            background: #ff8da1; 
+            color: white; 
+            border: 3px solid black; 
+            border-radius: 20px; 
+            padding: 12px; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            box-shadow: 0px 5px 0px black;
+            transition: all 0.1s;
+            width: 100%;
+        }
+        .action-btn:active { transform: translateY(3px); box-shadow: 0px 2px 0px black; }
+        .action-btn:disabled { background: #bbb; cursor: not-allowed; box-shadow: 0px 2px 0px #777; transform: translateY(2px); }
+
+        .nav-links { margin-top: auto; padding: 20px; width: 100%; display: flex; justify-content: space-between; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="sensei-container">
+    <div class="left-panel">
+        <h1 class="sensei-title">Sensei Room</h1>
+        <p style="color: #ffb6c1;">[ Sensei's Body Will Go Here ]</p>
+        
+        <div class="nav-links">
+            <a href="{{ url_for('profile_page') }}" style="text-decoration: none; color: black; font-weight: bold;">← Back to Atelier</a>
+            <a href="{{ url_for('wisdom_vault') }}" style="text-decoration: none; color: #ff8da1; font-weight: bold; border-bottom: 2px solid #ff8da1;">🏛️ Enter Wisdom Vault</a>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="top-section">
+            <div class="stats-bar">
+                <div class="stat-item">✨ Rank: <span id="user-level">{{ user.art_level }}</span></div>
+                <div class="stat-item">🎨 Points: <span id="user-points">{{ user.art_points }}</span></div>
+                <div class="stat-item">⌛ Session: <span id="timer">00:00</span></div>
+            </div>
+
+            <div class="art-preview-box" id="preview-container" onclick="document.getElementById('file-in').click()">
+                <span id="preview-text" style="font-size: 0.8rem; text-align: center;">Art Preview 🎀<br>(Click to Upload)</span>
+            </div>
+            <input type="file" id="file-in" accept="image/*" style="display: none;" onchange="previewImage(this)">
+        </div>
+
+        <div class="chat-box" id="chat-history">
+            <div class="msg sensei-msg">Welcome back. Show me your progress, and let's refine your craft. ✨</div>
+        </div>
+
+        <div class="input-container">
+            <div class="progress-container">
+                <div class="progress-fill" id="upload-progress"></div>
+            </div>
+
+            <div class="gemini-input-wrapper">
+                <textarea id="user-prompt" placeholder="Ask for a verdict..." rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+            </div>
+
+            <button id="submit-btn" class="action-btn" onclick="askSensei()">✨ Get Verdict</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('preview-container');
+                container.innerHTML = `<img src="${e.target.result}">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('upload-progress').style.width = '30%';
+        }
+    }
+
+    // UPDATED: Cooldown with Pulsing Bar and Logic Lock
+    function startCooldown(duration) {
+        const btn = document.getElementById('submit-btn');
+        const progressBar = document.getElementById('upload-progress');
+        const promptInput = document.getElementById('user-prompt');
+        
+        let timeLeft = duration;
+        
+        // Lock UI
+        btn.disabled = true;
+        promptInput.disabled = true;
+        progressBar.classList.add('pulsing');
+        progressBar.style.transition = "none"; 
+        progressBar.style.width = '100%'; // Start full
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            btn.innerText = `Sensei Resting (${timeLeft}s)`;
+            
+            // Drain the bar
+            let percentage = (timeLeft / duration) * 100;
+            progressBar.style.transition = "width 1s linear";
+            progressBar.style.width = percentage + "%";
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                // Unlock UI
+                btn.disabled = false;
+                promptInput.disabled = false;
+                btn.innerText = "✨ Get Verdict";
+                progressBar.classList.remove('pulsing');
+                progressBar.style.width = '0%';
+            }
+        }, 1000);
+    }
+
+    async function askSensei() {
+        const promptInput = document.getElementById('user-prompt');
+        const fileInput = document.getElementById('file-in');
+        const history = document.getElementById('chat-history');
+        const submitBtn = document.getElementById('submit-btn');
+        const progressBar = document.getElementById('upload-progress');
+
+        if (!fileInput.files[0]) {
+            alert("Sensei needs to see the art! Click the preview box to upload. ✨");
+            return;
+        }
+
+        const userText = promptInput.value || "Analyze my art.";
+        
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Sensei is observing...";
+        progressBar.style.width = '60%';
+        history.innerHTML += `<div class="msg user-msg">${userText}</div>`;
+        history.scrollTop = history.scrollHeight;
+
+        const formData = new FormData();
+        formData.append('art_file', fileInput.files[0]);
+        formData.append('query', userText);
+
+        try {
+            const response = await fetch('/get-critique', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            // Check status or message for meditation
+            if (data.status === "error" || (data.feedback && data.feedback.includes("meditating"))) {
+                progressBar.style.width = '0%';
+                history.innerHTML += `<div class="msg sensei-msg">${data.feedback}</div>`;
+                startCooldown(60); 
+            } else {
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    history.innerHTML += `<div class="msg sensei-msg">${data.feedback}</div>`;
+                    document.getElementById('user-points').innerText = data.points;
+                    document.getElementById('user-level').innerText = data.level;
+                    progressBar.style.width = '0%';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "✨ Get Verdict";
+                    
+                    if (data.leveled_up) {
+                        alert("🎉 Rank Up! You are now " + data.level);
+                    }
+                }, 500);
+            }
+
+        } catch (error) {
+            history.innerHTML += `<div class="msg sensei-msg">Sensei is meditating (Error). Try again in 60s! 🧘</div>`;
+            startCooldown(60); 
+        } finally {
+            promptInput.value = "";
+            promptInput.style.height = 'auto';
+            history.scrollTop = history.scrollHeight;
+        }
+    }
+
+    let seconds = 0;
+    setInterval(() => {
+        seconds++;
+        let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        let secs = (seconds % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${mins}:${secs}`;
+    }, 1000);
+</script>
+
+</body>
+</html>

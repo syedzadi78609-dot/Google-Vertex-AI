@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ArtVault - Your Atelier 🎨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* --- COMPACT FULL-SCREEN LAYOUT --- */
+        * { font-family: 'Quicksand', sans-serif; box-sizing: border-box; }
+        body { background: #fff0f3; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .gallery-container {
+            width: 95vw; height: 90vh; background: white; border: 5px solid black; 
+            border-radius: 40px; padding: 20px; text-align: center;
+            box-shadow: 15px 15px 0px #ffcad4; position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        h1 { font-family: 'Grand Hotel', cursive; color: #ff8fa3; font-size: 3.5rem; margin: 10px 0 0; }
+
+        /* --- VERTICAL SCROLLING GRID --- */
+        .art-grid {
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 25px; 
+            padding: 20px;
+            justify-content: center; 
+            align-items: flex-start; 
+            overflow-y: auto; 
+            max-height: 60vh; 
+            width: 100%;
+        }
+
+        /* Pink Scrollbar */
+        .art-grid::-webkit-scrollbar { width: 10px; }
+        .art-grid::-webkit-scrollbar-thumb { background: #ff8fa3; border-radius: 10px; border: 2px solid white; }
+        .art-grid::-webkit-scrollbar-track { background: #fff0f3; }
+
+        .art-card {
+            background: white; border: 3px solid black; border-radius: 20px;
+            padding: 15px; width: 220px; flex-shrink: 0;
+            box-shadow: 6px 6px 0px #ffcad4; transition: 0.2s; cursor: pointer;
+            position: relative;
+        }
+        .art-card:hover { transform: scale(1.03); }
+        .art-card img { width: 100%; height: 150px; border-radius: 12px; object-fit: cover; border: 2px solid #eee; }
+        
+        /* Delete Button Style */
+        .delete-btn {
+            background: #ff4d4d; color: white; border: 2px solid black; 
+            padding: 4px 10px; cursor: pointer; border-radius: 8px;
+            font-size: 0.8rem; font-weight: bold; margin-top: 10px;
+            transition: 0.2s; width: 100%;
+        }
+        .delete-btn:hover { background: #ff1a1a; transform: translateY(-2px); }
+
+        .plus-card {
+            border: 3px dashed #ffb7c5; background: transparent; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; height: 185px; width: 220px;
+        }
+
+        .sketchbook-btn {
+            background: #ff8fa3; color: white; padding: 12px 40px;
+            border-radius: 50px; border: 3px solid black; font-size: 1.1rem;
+            cursor: pointer; box-shadow: 5px 5px 0px black; align-self: center;
+            transition: 0.2s; margin-bottom: 15px;
+        }
+        .sketchbook-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px black; }
+
+        .stats-banner {
+            background: #fff0f3; border: 2px solid #ffcad4;
+            border-radius: 15px; padding: 5px 20px; font-size: 0.9rem;
+            display: inline-block; margin-bottom: 10px;
+        }
+
+        /* --- MODAL OVERLAYS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
+        }
+
+        #image-viewer .full-res-image { max-width: 85%; max-height: 85%; border-radius: 20px; border: 5px solid white; }
+        .close-btn { position: absolute; top: 30px; right: 40px; color: white; font-size: 50px; font-weight: bold; cursor: pointer; z-index: 3000; }
+
+        /* --- ENHANCED BIGGER SKETCHBOOK --- */
+        .sketchbook-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .sketchbook-wrap { 
+            position: relative; 
+            width: 800px; 
+            height: 550px; 
+            perspective: 2500px; 
+            margin-bottom: 40px;
+        }
+
+        .book { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+
+        .page {
+            width: 50%; height: 100%; background: white; border: 2px solid #000;
+            position: absolute; right: 0; transform-origin: left;
+            transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px; backface-visibility: hidden; box-shadow: inset 3px 0px 20px rgba(0,0,0,0.15);
+        }
+        
+        .page.flipped { transform: rotateY(-180deg); }
+        .page.cover { background: #ff8fa3; color: white; z-index: 100 !important; border: 4px solid black; }
+        .page img { width: 100%; height: 85%; object-fit: contain; border-radius: 10px; border: 1px solid #ddd; background: #fafafa; }
+
+        .nav-controls { display: flex; gap: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="gallery-container">
+        <a href="{{ url_for('profile_page') }}" style="position: absolute; top: 25px; left: 30px; text-decoration: none; color: #ff8fa3; font-weight: bold; font-size: 1.1rem;">⬅ Atelier</a>
+        
+        <div>
+            <h1>Your Atelier 🍓</h1>
+            <div class="stats-banner">
+                <b style="color: #ff8fa3;">{{ user.art_level }}</b> | <b>{{ user.art_points }} pts</b>
+            </div>
+        </div>
+
+        <div class="art-grid" id="galleryGrid">
+            {% for art in artworks %}
+            <div class="art-card" onclick="viewArtPic('{{ url_for('static', filename='uploads/' + art.filename) }}')">
+                <img src="{{ url_for('static', filename='uploads/' + art.filename) }}">
+                <p style="font-weight: bold; margin: 8px 0 5px;">{{ art.title }} 🎀</p>
+                
+                <form action="{{ url_for('delete_art', filename=art.filename) }}" method="POST" onsubmit="return confirm('Erase this masterpiece forever?');" onclick="event.stopPropagation();">
+                    <button type="submit" class="delete-btn">🗑️ Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+
+            <form action="{{ url_for('upload_art') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <input type="file" name="art_file" id="fileInput" hidden onchange="document.getElementById('uploadForm').submit()">
+                <div class="art-card plus-card" onclick="document.getElementById('fileInput').click()">
+                    <span style="font-size: 4rem; color: #ffb7c5;">+</span>
+                </div>
+            </form>
+        </div>
+
+        <button class="sketchbook-btn" onclick="openSketchbook()">📖 See Progress (Flip Sketchbook)</button>
+    </div>
+
+    <div id="sketchbook-modal" class="modal-overlay">
+        <span class="close-btn" onclick="closeSketchbook()">×</span>
+        <div class="sketchbook-container">
+            <div class="sketchbook-wrap">
+                <div class="book" id="bookStack"></div>
+            </div>
+            <div class="nav-controls">
+                <button class="sketchbook-btn" onclick="prevPage()">⬅ Prev</button>
+                <button class="sketchbook-btn" onclick="nextPage()">Next ➡</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-viewer" class="modal-overlay" onclick="closeViewer()">
+        <span class="close-btn">×</span>
+        <img class="full-res-image" id="full-img">
+    </div>
+
+    <script>
+        let currentIdx = 0;
+        const artworks = [
+            {% for art in artworks %}
+            { src: "{{ url_for('static', filename='uploads/' + art.filename) }}", title: "{{ art.title }}" },
+            {% endfor %}
+        ];
+
+        function viewArtPic(fullPath) {
+            document.getElementById('full-img').src = fullPath;
+            document.getElementById('image-viewer').style.display = 'flex';
+        }
+        function closeViewer() { document.getElementById('image-viewer').style.display = 'none'; }
+
+        function openSketchbook() {
+            if (artworks.length === 0) {
+                alert("Upload some art first! 🎀");
+                return;
+            }
+            const stack = document.getElementById('bookStack');
+            stack.innerHTML = `<div class="page cover" style="z-index: 99;">
+                                <h2 style="font-family: 'Grand Hotel'; font-size: 3.5rem;">My Sketchbook</h2>
+                                <p style="font-size: 1.2rem;">By {{ user.username }}</p>
+                                <span style="font-size: 5rem;">✨</span>
+                              </div>`;
+
+            artworks.forEach((art, i) => {
+                const page = document.createElement('div');
+                page.className = 'page';
+                page.style.zIndex = artworks.length - i; 
+                page.innerHTML = `
+                    <img src="${art.src}">
+                    <p style="font-weight:bold; color:#ff8fa3; margin:15px 0 5px; font-size: 1.2rem;">${art.title}</p>
+                    <small style="color: #888;">Page ${i + 1}</small>
+                `;
+                stack.appendChild(page);
+            });
+            document.getElementById('sketchbook-modal').style.display = 'flex';
+            currentIdx = 0;
+        }
+
+        function nextPage() {
+            const pages = document.querySelectorAll('.page');
+            if (currentIdx < pages.length - 1) {
+                pages[currentIdx].classList.add('flipped');
+                currentIdx++;
+            }
+        }
+        function prevPage() {
+            const pages = document.querySelectorAll('.page');
+            if (currentIdx > 0) {
+                currentIdx--;
+                pages[currentIdx].classList.remove('flipped');
+            }
+        }
+        function closeSketchbook() { document.getElementById('sketchbook-modal').style.display = 'none'; }
+    </script>
+</body>
+</html>

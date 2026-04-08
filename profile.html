@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Atelier Workstation 🍓</title>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* --- KEEPING ALL YOUR ORIGINAL STYLES --- */
+        * { font-family: 'Quicksand', sans-serif; }
+        h1, h2, .profile-badge-btn b { font-family: 'Grand Hotel', cursive; }
+        body { background: #fff0f3; margin: 0; }
+        
+        .hub-container {
+            width: 95%; max-width: 1500px; margin: 30px auto; padding: 40px;
+            background: white; border: 5px solid black; border-radius: 60px;
+            position: relative; box-shadow: 15px 15px 0px #ffcad4; min-height: 80vh;
+        }
+
+        .profile-badge-btn {
+            position: absolute; top: 30px; right: 50px;
+            background: white; border: 4px solid black; border-radius: 25px;
+            padding: 12px 25px; display: flex; align-items: center; gap: 20px;
+            box-shadow: 8px 8px 0px #ffcad4; cursor: pointer; transition: 0.2s;
+            z-index: 10;
+        }
+        .profile-badge-btn:hover { transform: scale(1.02); }
+
+        .dp-circle {
+            width: 65px; height: 65px; border-radius: 50%; border: 3px solid black;
+            background: #f8f8f8; overflow: hidden; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .search-trigger {
+            text-decoration: none; background: white; border: 3px solid black; 
+            padding: 10px 20px; border-radius: 20px; font-weight: bold; 
+            color: black; display: inline-block; margin-bottom: 20px;
+            transition: 0.2s; box-shadow: 4px 4px 0px #ffcad4;
+        }
+        .search-trigger:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #ff8fa3; }
+
+        /* --- NEW: HUB BUTTON STYLE --- */
+        .hub-trigger {
+            text-decoration: none; background: #ff8fa3; border: 3px solid black; 
+            padding: 10px 20px; border-radius: 20px; font-weight: bold; 
+            color: white; display: inline-block; margin-left: 10px;
+            transition: 0.2s; box-shadow: 4px 4px 0px black;
+        }
+
+        .status-box {
+            background: #fff5f6; border: 3px dashed #ff8fa3; border-radius: 25px;
+            padding: 15px 25px; margin: 20px 0; display: inline-block;
+            max-width: 500px; position: relative;
+        }
+        .status-text { font-style: italic; color: #ff3366; font-size: 1.1rem; }
+
+        /* --- POST GRID (INSTAGRAM STYLE) --- */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .post-item {
+            aspect-ratio: 1 / 1;
+            border: 3px solid black;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 5px 5px 0px #ffcad4;
+        }
+        .post-item:hover { transform: scale(1.02); box-shadow: 8px 8px 0px #ff8fa3; }
+        .post-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- ORIGINAL CARDS --- */
+        .grid-layout {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 25px; margin-top: 40px;
+        }
+        .nav-card {
+            background: white; border: 4px solid black; border-radius: 35px;
+            padding: 25px; text-decoration: none; color: black;
+            box-shadow: 8px 8px 0px #ffcad4; transition: 0.3s; text-align: center;
+        }
+        .nav-card:hover { transform: translateY(-8px); box-shadow: 12px 12px 0px #ff8fa3; }
+        .nav-card h2 { font-size: 2rem; margin: 10px 0; }
+
+        /* Rest of your existing CSS remains exactly as is */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,192,203,0.5); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-box { background: white; border: 5px solid black; border-radius: 40px; padding: 40px; width: 450px; text-align: center; position: relative; }
+        .alert-text { color: #ff8fa3; font-size: 1.4rem; font-weight: bold; margin-bottom: 20px; }
+        #image-viewer { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .full-res-image { max-width: 80%; max-height: 80%; border-radius: 20px; border: 4px solid white; }
+        .close-viewer { position: absolute; top: 20px; right: 40px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+        .trophy-gold { color: #FFD700; font-size: 2rem; }
+        .trophy-silver { color: #A0CED9; font-size: 2rem; }
+        .badge { padding: 5px 15px; border-radius: 50px; color: white; font-weight: bold; border: 2px solid black; font-size: 0.9rem; display: inline-block; margin-top: 8px; }
+        .badge-art { background: #FF8FA3; } 
+        .badge-anim { background: #7BD5F5; }
+        .apply-btn { background: #ff8fa3; color: white; padding: 12px 30px; border: 3px solid black; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 1.1rem; transition: 0.2s; }
+        .apply-btn:hover { background: #ff3366; }
+    </style>
+</head>
+<body>
+
+    <div class="hub-container">
+        <div style="text-align: left;">
+            <a href="{{ url_for('search_artists') }}" class="search-trigger">🔍 Search Artists</a>
+            
+            {% if is_owner %}
+            <a href="{{ url_for('comrade_feed') }}" class="hub-trigger">✨ See what your comrades are up to</a>
+            {% endif %}
+        </div>
+
+        {% if is_owner and user.pending_requests %}
+        <div style="position: absolute; top: 20px; right: 50px; z-index: 15; background: red; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border: 2px solid white; pointer-events: none;">
+            {{ user.pending_requests|length }}
+        </div>
+        {% endif %}
+
+        <div class="profile-badge-btn" onclick="openStats()">
+            <div class="dp-circle" onclick="event.stopPropagation(); viewProfilePic('{{ user.profile_pic }}', '{{ url_for('static', filename='uploads/' + user.profile_pic) }}', '{{ user.username }}')">
+                {% if user.profile_pic == "default_avatar.png" %}
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" style="width:100%; height:100%; object-fit:cover;">
+                {% endif %}
+            </div>
+            <div style="text-align: left;">
+                <b style="color: #ff8fa3; font-size: 1.8rem;">{{ user.username }}</b><br>
+                <span style="background: #fdf0d5; color: #6d597a; padding: 2px 8px; border: 2px solid #6d597a; border-radius: 10px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 3px;">
+                    📜 Sensei: {{ user.selected_sensei or 'Self-Taught' }}
+                </span><br>
+                <span style="font-size: 0.8rem; color: #666;">View Atelier Stats シ</span>
+            </div>
+        </div>
+
+        <h1 style="color: #ff8fa3; font-size: 4rem; margin-top: 0;">Atelier Workstation 🍓</h1>
+        
+        <div style="display: flex; align-items: center; gap: 15px; justify-content: center;">
+            <div class="status-box">
+                <span style="font-size: 0.8rem; font-weight: bold; color: #ff8fa3; display: block; margin-bottom: 5px;">CURRENT STATUS:</span>
+                <span class="status-text">"{{ user.status or 'No status set...' }}"</span>
+            </div>
+            
+            {% if not is_owner and viewer_is_comrade and user.status %}
+            <a href="{{ url_for('view_status', username=user.username) }}" class="apply-btn" style="width: auto; margin-top: 0; padding: 10px 20px;">🎬 Watch Status</a>
+            {% endif %}
+        </div>
+
+        {% if is_owner %}
+            <div class="grid-layout">
+                <a href="{{ url_for('gallery') }}" class="nav-card">
+                    <span style="font-size: 3.5rem;">🖼️</span>
+                    <h2>Art Gallery</h2>
+                    <p>Vault & Progress Sketchbook</p>
+                </a>
+                <a href="{{ url_for('animation') }}" class="nav-card">
+                    <span style="font-size: 3.5rem;">🎬</span>
+                    <h2>Animation</h2>
+                    <p>Loops & Motion Studies</p>
+                </a>
+                <a href="{{ url_for('critique_room') }}" class="nav-card">
+                    <span style="font-size: 3.5rem;">🤖</span>
+                    <h2>Critique Room</h2>
+                    <p>Feedback from AI Sensei</p>
+                </a>
+                <div class="nav-card" style="border-style: dashed; border-color: #ffcad4; color: #ffcad4; opacity: 0.7;">
+                    <span style="font-size: 3.5rem;">🧬</span>
+                    <h2>Omnitrix Lab</h2>
+                    <p>Mascot Selection (Coming Summer)</p>
+                </div>
+            </div>
+
+        {% elif viewer_is_comrade %}
+            <h2 style="margin-top: 40px; color: #ff8fa3;">Recent Works by {{ user.username }} ✨</h2>
+            <div class="posts-grid">
+                {% for art in artworks %}
+                <div class="post-item" onclick="viewArtPic('{{ url_for('static', filename='uploads/' + art.filename) }}')">
+                    <img src="{{ url_for('static', filename='uploads/' + art.filename) }}" alt="{{ art.title }}">
+                </div>
+                {% else %}
+                <p style="grid-column: 1/-1; color: #999;">No posts shared yet!</p>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div class="grid-layout">
+                <div class="nav-card" style="grid-column: 1 / -1; border-style: dashed; background: #fdfafb; opacity: 0.9;">
+                    <span style="font-size: 4rem;">🔒</span>
+                    <h2 style="color: #ff8fa3;">This Artist is not your Comrade</h2>
+                    <p style="color: #666; font-weight: bold;">You can only view their level and points. Send a request to unlock the Vault!</p>
+                    
+                    {% if request_pending %}
+                        <button class="apply-btn" style="background: #ccc; cursor: default; width: auto;">⏳ Comrade Request Pending...</button>
+                    {% else %}
+                        <form action="{{ url_for('send_comrade_request', username=user.username) }}" method="POST">
+                            <button type="submit" class="apply-btn" style="width: auto; padding: 12px 50px;">🤝 Send Comrade Request</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="dp-circle" style="width: 100px; height: 100px; margin: 0 auto 15px; border-width: 4px;" onclick="viewProfilePic('{{ user.profile_pic }}', '{{ url_for('static', filename='uploads/' + user.profile_pic) }}', '{{ user.username }}')">
+                {% if user.profile_pic == "default_avatar.png" %}
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" style="width:100%; height:100%; object-fit:cover;">
+                {% endif %}
+            </div>
+            <h2 style="font-size: 2.5rem; margin-bottom: 5px;">{{ user.username }}</h2>
+            
+            <p style="color: gray; margin-bottom: 15px;">
+                Representative: 
+                {{ user.icons.get(user.selected_icon_name, '✨') }} 
+                {{ user.selected_icon_name }}
+            </p>
+
+            <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                <div>
+                    <span class="trophy-gold">🏆</span><br>
+                    <b style="font-size: 1.2rem;">{{ user.art_points }} pts</b><br>
+                    <span class="badge badge-art">{{ user.art_level }}</span>
+                </div>
+                <div>
+                    <span class="trophy-silver">🏆</span><br>
+                    <b style="font-size: 1.2rem;">{{ user.anim_points }} pts</b><br>
+                    <span class="badge badge-anim">{{ user.anim_level }}</span>
+                </div>
+            </div>
+
+            {% if is_owner and user.pending_requests %}
+            <div class="notification-area">
+                <b style="color: #ff8fa3; font-size: 0.8rem;">NEW COMRADE REQUESTS:</b>
+                {% for requester in user.pending_requests %}
+                <div class="request-item">
+                    <span>{{ requester }}</span>
+                    <div>
+                        <form action="{{ url_for('accept_comrade', username=requester) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-mini btn-accept">Accept</button>
+                        </form>
+                        <form action="{{ url_for('decline_comrade', username=requester) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-mini btn-decline">✖</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if is_owner %}
+                <button class="apply-btn" onclick="openSettings()">Modify Atelier</button>
+            {% elif viewer_is_comrade %}
+                <form action="{{ url_for('decline_comrade', username=user.username) }}" method="POST">
+                    <button type="submit" class="apply-btn" style="background: #ffccd5; color: #ff3366;">Break Comrade Bond 💔</button>
+                </form>
+            {% else %}
+                <button class="apply-btn" style="background: #7BD5F5;">Send Message 💌</button>
+            {% endif %}
+            
+            <p onclick="closeAll()" style="cursor:pointer; color:gray; margin-top:15px;">Close</p>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-box" style="text-align: left;">
+            <h2 style="text-align: center; color: #ff8fa3; font-size: 2.5rem;">Atelier Settings 🎀</h2>
+            <form action="/update-atelier" method="POST" enctype="multipart/form-data">
+                <label><b>Display Name:</b></label>
+                <input type="text" name="username" value="{{ user.username }}" style="width: 100%; padding: 10px; margin: 10px 0 20px; border: 2px solid black; border-radius: 10px; box-sizing: border-box;">
+
+                <label><b>Personal Status:</b></label>
+                <input type="text" name="status" value="{{ user.status or '' }}" placeholder="What are you working on?" style="width: 100%; padding: 10px; margin: 10px 0 20px; border: 2px solid black; border-radius: 10px; box-sizing: border-box;">
+
+                <label><b>Change Profile Picture (DP):</b></label><br>
+                <input type="file" name="profile_pic_file" style="margin: 10px 0 20px;">
+
+                <label><b>Level Representative Icon:</b></label>
+                <select name="active_icon" style="width: 100%; padding: 10px; margin: 10px 0 20px; border: 2px solid black; border-radius: 10px;">
+                    {% for name, val in user.icons.items() %}
+                        <option value="{{ name }}" {% if user.selected_icon_name == name %}selected{% endif %}>
+                            {{ val }} {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="apply-btn">Apply Changes</button>
+                <p onclick="closeAll()" style="cursor:pointer; text-align:center; color:gray; margin-top:15px;">Cancel</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="image-viewer" onclick="closeViewer()">
+        <span class="close-viewer">&times;</span>
+        <img class="full-res-image" id="full-img">
+    </div>
+
+    <script>
+        function openStats() { document.getElementById('stats-modal').style.display = 'flex'; }
+        function openSettings() { 
+            document.getElementById('stats-modal').style.display = 'none';
+            document.getElementById('settings-modal').style.display = 'flex'; 
+        }
+        function closeAll() { 
+            document.getElementById('stats-modal').style.display = 'none';
+            document.getElementById('settings-modal').style.display = 'none'; 
+        }
+        function viewArtPic(fullPath) {
+            document.getElementById('full-img').src = fullPath;
+            document.getElementById('image-viewer').style.display = 'flex';
+        }
+        function viewProfilePic(fileName, fullPath, username) {
+            if (fileName === "default_avatar.png") {
+                alert(username + " hasn't set a photo yet!");
+            } else {
+                document.getElementById('full-img').src = fullPath;
+                document.getElementById('image-viewer').style.display = 'flex';
+            }
+        }
+        function closeViewer() { document.getElementById('image-viewer').style.display = 'none'; }
+    </script>
+</body>
+</html>

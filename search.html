@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Atelier - Search Artists</title>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* --- GLOBAL FONT SETTINGS (Updated to match Workstation) --- */
+        * { font-family: 'Quicksand', sans-serif; }
+        h1, h3 { font-family: 'Grand Hotel', cursive; }
+
+        body { background: #fff0f3; margin: 0; }
+        
+        .search-container { max-width: 800px; margin: 50px auto; padding: 20px; }
+        
+        .search-header { text-align: center; margin-bottom: 40px; }
+        .search-header h1 { font-size: 3.5rem; color: #ff8fa3; margin-bottom: 0; }
+        
+        .search-bar-wrapper {
+            display: flex;
+            gap: 10px;
+            background: white;
+            border: 4px solid black;
+            border-radius: 50px;
+            padding: 10px 25px;
+            box-shadow: 8px 8px 0px #ffcad4;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1.2rem;
+            font-family: inherit;
+        }
+
+        .search-btn {
+            background: #ff8fa3;
+            border: 3px solid black;
+            border-radius: 25px;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: 0.2s;
+        }
+        .search-btn:hover { background: #ff3366; }
+
+        .results-area { margin-top: 40px; }
+
+        /* USER CARD STYLE */
+        .artist-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border: 3px solid black;
+            border-radius: 25px;
+            padding: 20px;
+            text-decoration: none;
+            color: black;
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+            box-shadow: 5px 5px 0px #ffcad4;
+        }
+
+        .artist-card:hover { transform: translateX(10px); background: #fff5f6; box-shadow: 8px 8px 0px #ff8fa3; }
+
+        .avatar-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid black;
+            background: #eee;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        .artist-info h3 { margin: 0; color: #ff3366; font-size: 1.8rem; }
+        .artist-stats { font-size: 0.9rem; color: #666; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="search-container">
+    <div class="search-header">
+        <h1>🔍 Find Fellow Artists</h1>
+        <p style="color: #666;">Enter a username to view their Atelier and progress.</p>
+    </div>
+
+    <form action="{{ url_for('search_artists') }}" method="GET" class="search-bar-wrapper">
+        <input type="text" name="q" class="search-input" placeholder="Search by username..." value="{{ query or '' }}">
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <div class="results-area">
+        {% if query %}
+            {% if results %}
+                {% for artist in results %}
+                <a href="{{ url_for('profile_page', username=artist.username) }}" class="artist-card">
+                    <div class="avatar-circle">
+                        {% if artist.profile_pic == "default_avatar.png" %}
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + artist.profile_pic) }}" alt="Avatar">
+                        {% endif %}
+                    </div>
+                    <div class="artist-info">
+                        <h3>{{ artist.username }}</h3>
+                        <div class="artist-stats">
+                            ✨ Rank: {{ artist.art_level }} | 🎨 Points: {{ artist.art_points }}
+                        </div>
+                    </div>
+                    <div style="margin-left: auto; font-size: 1.5rem;">➡️</div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; opacity: 0.6; margin-top: 30px;">
+                    <span style="font-size: 3rem;">🧘</span>
+                    <p>No artist found with that name. Check your spelling!</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div style="text-align: center; margin-top: 50px;">
+        <a href="{{ url_for('profile_page') }}" style="color: #ff3366; font-weight: bold; text-decoration: none;">← Return to My Atelier</a>
+    </div>
+    
+</div>
+
+</body>
+</html>

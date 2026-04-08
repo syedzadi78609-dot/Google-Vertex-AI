@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtVault - Login 🎀</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="login-container login-mode">
+        <h1>Login 🎀</h1>
+        <p>Welcome back, Artist! シ</p>
+        
+        <form action="{{ url_for('login_logic') }}" method="POST">
+            <div class="form-grid">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+
+            <p style="margin-top: 15px;">
+                <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+            </p>
+            
+            <button type="submit" class="done-btn">Done</button>
+            
+            <p style="margin-top: 20px;">
+                New here? <a href="{{ url_for('signup_page') }}">Create an account</a>
+            </p>
+        </form>
+    </div>
+</body>
+</html>
